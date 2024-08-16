@@ -1,4 +1,5 @@
 import pytest
+import os
 
 from managers import DataMgr
 
@@ -40,8 +41,12 @@ def test_save(data_mgr) -> None:
     assert run_1.loot != []
     assert run_2.loot != []
 
-    data_mgr.save()
-    assert False
+    all_paths = data_mgr.save()
+    for folder_path in all_paths['folders']:
+        assert os.path.exists(folder_path)
+
+    for file_path in all_paths['files']:
+        assert os.path.isfile(file_path)
 
 
 def test_load(data_mgr) -> None:
