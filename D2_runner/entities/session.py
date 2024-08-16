@@ -19,16 +19,16 @@ class Session:
         for run in self.runs:
             all_run_times.append({
                 'run': run,
-                'delta': run.run_time_delta
+                'delta': run.run_time_seconds
             })
 
         if self.runs and len(all_run_times) > 1:
-            fastest = min(self.runs, key=lambda x: x.run_time_delta)
-            slowest = max(self.runs, key=lambda x: x.run_time_delta)
+            fastest = min(self.runs, key=lambda x: x.run_time_seconds)
+            slowest = max(self.runs, key=lambda x: x.run_time_seconds)
             average = timedelta_to_str(
-                (fastest.run_time_delta + slowest.run_time_delta) / 2
+                (fastest.run_time_seconds + slowest.run_time_seconds) / 2
             )
-            return [fastest.run_time, slowest.run_time, average]
+            return [fastest.run_time_stamp, slowest.run_time_stamp, average]
 
         return results
 

@@ -17,8 +17,8 @@ class Run:
         self._start_time = None
         self._finish_time = None
         self._timestamp_format = '%H:%M:%S'
-        self._run_time_delta = None
-        self._run_time = None
+        self._run_time_seconds = None
+        self._run_time_stamp = None
         self.loot: list[Item] = []
 
     def start_run(self) -> None:
@@ -35,11 +35,11 @@ class Run:
     def _calc_run_time(self) -> None:
         '''Calculate the time for which the run was performed.'''
         if self._start_time and self._finish_time:
-            self._run_time_delta = (
+            self._run_time_seconds = (
                 max((self._start_time, self._finish_time))
                 - min((self._start_time, self._finish_time))
             )
-            self._run_time = timedelta_to_str(self._run_time_delta)
+            self._run_time_stamp = timedelta_to_str(self._run_time_seconds)
             return
 
         raise RuntimeError('Run is not finished yet!')
@@ -62,11 +62,11 @@ class Run:
             return self._finish_time.strftime(self._timestamp_format)
 
     @property
-    def run_time(self) -> str | None:
-        '''Get the time for which the run was performed.'''
-        return self._run_time
+    def run_time_stamp(self) -> str | None:
+        '''Get the time stamp for which the run was performed.'''
+        return self._run_time_stamp
 
     @property
-    def run_time_delta(self) -> timedelta:
-        '''Get the timedelta object of the run time'''
-        return self._run_time_delta
+    def run_time_seconds(self) -> timedelta:
+        '''Get the seconds of the run time'''
+        return self._run_time_seconds

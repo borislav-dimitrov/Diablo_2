@@ -19,15 +19,15 @@ def test_run_content(run):
     assert hasattr(run, '_start_time') and run._start_time is None
     assert hasattr(run, '_finish_time') and run._finish_time is None
     assert hasattr(run, '_timestamp_format') and run._timestamp_format == '%H:%M:%S'
-    assert hasattr(run, '_run_time') and run._run_time is None
-    assert hasattr(run, '_run_time_delta') and run._run_time_delta is None
+    assert hasattr(run, '_run_time_stamp') and run._run_time_stamp is None
+    assert hasattr(run, '_run_time_seconds') and run._run_time_seconds is None
     assert hasattr(run, 'loot') and run.loot == []
 
     # Properties
     assert hasattr(run, 'start_time') and run.start_time is None
     assert hasattr(run, 'finish_time') and run.finish_time is None
-    assert hasattr(run, 'run_time') and run.run_time is None
-    assert hasattr(run, 'run_time_delta') and run.run_time_delta is None
+    assert hasattr(run, 'run_time_stamp') and run.run_time_stamp is None
+    assert hasattr(run, 'run_time_seconds') and run.run_time_seconds is None
     assert hasattr(run, 'state') and run.state is RunStates.INITIALIZED
 
 
@@ -61,8 +61,8 @@ def test_calc_run_time(run):
     time.sleep(1)
     run.finish_run()
 
-    assert run._run_time_delta is not None
-    assert run.run_time_delta is not None
-    assert run._run_time is not None
-    assert run.run_time is not None
-    assert run._run_time is run.run_time
+    assert run._run_time_seconds is not None
+    assert run.run_time_seconds is not None
+    assert run._run_time_stamp is not None
+    assert run.run_time_stamp is not None
+    assert run._run_time_stamp is run.run_time_stamp
