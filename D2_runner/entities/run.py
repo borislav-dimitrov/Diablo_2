@@ -35,11 +35,12 @@ class Run:
     def _calc_run_time(self) -> None:
         '''Calculate the time for which the run was performed.'''
         if self._start_time and self._finish_time:
-            self._run_time_seconds = (
+            delta_obj = (
                 max((self._start_time, self._finish_time))
                 - min((self._start_time, self._finish_time))
             )
-            self._run_time_stamp = timedelta_to_str(self._run_time_seconds)
+            self._run_time_seconds = delta_obj.total_seconds()
+            self._run_time_stamp = timedelta_to_str(timedelta(seconds=self._run_time_seconds))
             return
 
         raise RuntimeError('Run is not finished yet!')

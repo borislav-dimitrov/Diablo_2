@@ -1,3 +1,4 @@
+from datetime import timedelta
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -26,7 +27,10 @@ class Session:
             fastest = min(self.runs, key=lambda x: x.run_time_seconds)
             slowest = max(self.runs, key=lambda x: x.run_time_seconds)
             average = timedelta_to_str(
-                (fastest.run_time_seconds + slowest.run_time_seconds) / 2
+                (
+                    timedelta(seconds=fastest.run_time_seconds)
+                    + timedelta(seconds=slowest.run_time_seconds)
+                ) / 2
             )
             return [fastest.run_time_stamp, slowest.run_time_stamp, average]
 
