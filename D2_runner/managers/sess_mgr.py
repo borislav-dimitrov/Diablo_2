@@ -8,7 +8,7 @@ class SessMgr:
 
     def create_session(self) -> Session:
         '''Create and return a new session.'''
-        session = Session(sess_id=generate_uniq_id)
+        session = Session(sess_id=generate_uniq_id())
         self._all_sessions.append(session)
         return session
 

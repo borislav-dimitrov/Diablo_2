@@ -8,7 +8,7 @@ class RunMgr:
 
     def create_run(self) -> Run:
         '''Create and return a new run.'''
-        run = Run(run_id=generate_uniq_id)
+        run = Run(run_id=generate_uniq_id())
         self._all_runs.append(run)
         return run
 
