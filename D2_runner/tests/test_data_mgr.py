@@ -1,17 +1,20 @@
 import pytest
 import os
+import shutil
+from typing import Generator
 
 from managers import DataMgr
 
 
-@pytest.fixture
-def data_mgr() -> DataMgr:
-    data_mgr = DataMgr()
-    return data_mgr
+def clear_data_dir(data_mgr: DataMgr) -> None:
+    '''Clear the data directory before/after the tests.'''
+    for sess_folder in os.listdir(data_mgr.data_dir):
+        shutil.rmtree(os.path.join(data_mgr.data_dir, sess_folder))
+    assert os.listdir(data_mgr.data_dir) == []
 
 
-def test_save(data_mgr) -> None:
-    '''Test the data manager save functionality'''
+def create_dummy_data(data_mgr: DataMgr) -> None:
+    '''Create dummy data for the tests.'''
     item_1 = data_mgr.item_mgr.create_item(description='item001')
     assert item_1 in data_mgr.item_mgr.all_items
     item_2 = data_mgr.item_mgr.create_item(description='item002')
@@ -41,7 +44,21 @@ def test_save(data_mgr) -> None:
     assert run_1.loot != []
     assert run_2.loot != []
 
+
+@pytest.fixture
+def data_mgr() -> Generator:
+    data_mgr = DataMgr(data_dir=os.path.abspath(r'tests\test_data_dir'))
+    clear_data_dir(data_mgr)
+    create_dummy_data(data_mgr)
+    yield data_mgr
+    clear_data_dir(data_mgr)
+
+
+def test_save(data_mgr: DataMgr) -> None:
+    '''Test the data manager save functionality'''
     all_paths = data_mgr.save()
+    assert all_paths['folders'] and all_paths['files']
+
     for folder_path in all_paths['folders']:
         assert os.path.exists(folder_path)
 
@@ -49,6 +66,11 @@ def test_save(data_mgr) -> None:
         assert os.path.isfile(file_path)
 
 
-def test_load(data_mgr) -> None:
+def test_load(data_mgr: DataMgr) -> None:
     '''Test the data manager load functionality'''
-    assert False
+    data_mgr.save()
+    sessions = data_mgr.load()
+    assert len(sessions) == 1
+    assert len(sessions[0].runs) == 2
+    assert len(sessions[0].runs[0].loot) == 1
+    assert len(sessions[0].runs[1].loot) == 2
