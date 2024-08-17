@@ -19,6 +19,7 @@ def test_session_content(session):
     assert hasattr(session, 'fastest_run') and session.fastest_run == 'unknown'
     assert hasattr(session, 'slowest_run') and session.slowest_run == 'unknown'
     assert hasattr(session, 'average_run') and session.average_run == 'unknown'
+    assert hasattr(session, 'runs_count') and session.runs_count == 0
 
     # Methods
     assert hasattr(session, '_calc_run_times')

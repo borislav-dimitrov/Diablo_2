@@ -1,5 +1,9 @@
+from gui import App
+
+
 def main_func():
-    print('hello woirld')
+    app = App()
+    app.run()
 
 if __name__ == '__main__':
     main_func()

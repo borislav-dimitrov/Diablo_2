@@ -50,3 +50,8 @@ class Session:
     def average_run(self) -> str:
         '''Get the average run time.'''
         return self._calc_run_times()[2]
+
+    @property
+    def runs_count(self) -> int:
+        '''Get the ammount of completed runs.'''
+        return len(self.runs)
