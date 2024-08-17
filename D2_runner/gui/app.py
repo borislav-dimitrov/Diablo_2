@@ -1,3 +1,8 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from managers import DataMgr
+
 import os
 import customtkinter as ctk
 import tkinter as tk
@@ -10,6 +15,7 @@ from .timers_tab import TimersTab
 class App:
     def __init__(
         self,
+        data_manager: DataMgr,
         appearance: Appearances = Appearances.DARK,
         theme: Themes = Themes.GREEN,
         resolution: tuple = (400, 630),
@@ -17,6 +23,7 @@ class App:
         title: str = 'Diablo 2 Runner',
         icon: str = r'resources\icon.ico'
     ) -> None:
+        self.data_mgr = data_manager
         self._appearance = appearance
         self._theme = theme
         self._resolution = resolution
@@ -47,7 +54,8 @@ class App:
         self._main_tab_view.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
         self._timers_tab = TimersTab(
-            theme=self._theme, frame=self._add_tab_to_main_tab_view('Timers')
+            app=self, theme=self._theme,
+            frame=self._add_tab_to_main_tab_view('Timers')
         )
         self._review_sess_tab = self._add_tab_to_main_tab_view('Review Session')
         self._grail_tab = self._add_tab_to_main_tab_view('Grail')

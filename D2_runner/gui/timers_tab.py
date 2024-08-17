@@ -1,33 +1,40 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from .app import App
+    from entities import Session, Run, Item
+
 import customtkinter as ctk
 import tkinter as tk
-from tkinter import ttk
 
 from utils import Themes, FONTS, THEME_COLORS
 
 
 class TimersTab:
     def __init__(
-        self, theme: Themes, frame: ctk.CTkFrame | ctk.CTkScrollableFrame
+        self,
+        app: App,
+        theme: Themes,
+        frame: ctk.CTkFrame | ctk.CTkScrollableFrame
     ) -> None:
         self._frame = frame
+        self._app = app
 
         # Style
         self._color_normal = THEME_COLORS[theme]['normal']
         self._color_hover = THEME_COLORS[theme]['hover']
 
         # Variables
+        self._sess_ongoing = None
+        self._run_ongoing = None
         self._sess_time = ctk.StringVar(value='00:00:00')
         self._run_time = ctk.StringVar(value='00:00:00')
         self._fastest_time = ctk.StringVar(value='00:00:00')
         self._slowest_time = ctk.StringVar(value='00:00:00')
         self._avg_time = ctk.StringVar(value='00:00:00')
         self._run_count = ctk.StringVar(value=f'{"0":<{len(self._sess_time.get())}}')
-        self._runs = []
 
         self._create_and_assemble()
-
-        for i in range(20):
-            self.add_run_to_runs_section(i * 50)
 
     def change_runs_count(self, count: int) -> None:
         '''Change the runs counter.'''
@@ -61,16 +68,18 @@ class TimersTab:
         # Controls
         controls_fr = ctk.CTkFrame(self._frame, fg_color='transparent')
         controls_fr.pack(side=tk.TOP, fill=tk.BOTH, expand=tk.TRUE, padx=10, pady=10)
+
         self._start_run_btn = ctk.CTkButton(
-            controls_fr, text='Start', width=100,
-            command=lambda: print('Starting run...'),
+            controls_fr, text='Start', width=100, command=self.start_run
         )
         self._start_run_btn.pack(side=tk.LEFT, fill=tk.X, expand=tk.FALSE, padx=(30, 0))
+        self._start_run_btn.configure(state=tk.NORMAL)
+
         self._stop_run_btn = ctk.CTkButton(
-            controls_fr, text='Stop', width=100,
-            command=lambda: print('Stopping run...')
+            controls_fr, text='Stop', width=100, command=self.stop_run
         )
         self._stop_run_btn.pack(side=tk.RIGHT, fill=tk.X, expand=tk.FALSE, padx=(0, 30))
+        self._stop_run_btn.configure(state=tk.DISABLED)
         # endregion
 
         # region Runs Frame
@@ -111,8 +120,7 @@ class TimersTab:
         self._runs_scrl_fr.pack(side=tk.TOP, fill=tk.BOTH, expand=tk.TRUE, padx=10, pady=5)
 
         self._add_item_to_run_btn = ctk.CTkButton(
-            self._frame, text='Add Item to the selected Run',
-            command=lambda: print('Adding item to...')
+            self._frame, text='Add Item to the selected Run', command=self.add_item_to_run
         )
         self._add_item_to_run_btn.pack(
             side=tk.TOP, fill=tk.BOTH, expand=tk.FALSE,
@@ -143,21 +151,55 @@ class TimersTab:
         )
         timer_lbl.pack(side=tk.LEFT, fill=tk.BOTH, expand=tk.TRUE)
 
-    def add_run_to_runs_section(self, run=None) -> None:
+    def _add_run_to_runs_section(self, new_run: Run) -> None:
         '''Add run to the runs section.'''
         assert hasattr(self, '_runs_scrl_fr')
 
+        run_count = self._sess_ongoing.runs_count
         base_fr = ctk.CTkFrame(self._runs_scrl_fr, fg_color='transparent')
         base_fr.pack(side=tk.TOP, fill=tk.X, padx=10)
 
         run_nr_lbl = ctk.CTkLabel(
-            base_fr, text=f'Run {run:>{len(self._sess_time.get())}}:', anchor=tk.W,
-            text_color=self._color_normal, font=FONTS['label']
+            base_fr, text=f'Run {run_count:>{len(self._sess_time.get())}}:',
+            anchor=tk.W, text_color=self._color_normal, font=FONTS['label']
         )
         run_nr_lbl.pack(side=tk.LEFT, fill=tk.BOTH, expand=tk.TRUE)
 
         timer_lbl = ctk.CTkLabel(
-            base_fr, text='00:00:00', anchor=tk.E,
+            base_fr, text=new_run.run_time_stamp, anchor=tk.E,
             text_color=self._color_normal, font=FONTS['label']
         )
         timer_lbl.pack(side=tk.LEFT, fill=tk.BOTH, expand=tk.TRUE)
+
+    def start_run(self) -> None:
+        '''Start a new run.'''
+        if self._run_ongoing:
+            raise RuntimeError('There is an ongoing run already!')
+
+        self._run_ongoing = self._app.data_mgr.run_mgr.create_run()
+        self._run_ongoing.start_run()
+        self._start_run_btn.configure(state=tk.DISABLED)
+        self._stop_run_btn.configure(state=tk.NORMAL)
+
+    def stop_run(self) -> None:
+        '''Stop the currently going run.'''
+        if not self._run_ongoing:
+            raise RuntimeError('You have to start a run first!')
+
+        if not self._sess_ongoing:
+            self._sess_ongoing = self._app.data_mgr.session_mgr.create_session()
+
+        self._run_ongoing.finish_run()
+        self._app.data_mgr.session_mgr.add_run_to_session(
+            run=self._run_ongoing, session=self._sess_ongoing
+        )
+        self._add_run_to_runs_section(self._run_ongoing)
+        self._run_ongoing = None
+        self._start_run_btn.configure(state=tk.NORMAL)
+        self._stop_run_btn.configure(state=tk.DISABLED)
+
+    def add_item_to_run(self) -> None:
+        '''Add item to the selected run'''
+        # TODO - get selected run
+        item = self._app.data_mgr.item_mgr.create_item(description='item001')
+        import pdb; pdb.set_trace()
