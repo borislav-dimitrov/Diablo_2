@@ -70,16 +70,22 @@ class TimersTab:
         controls_fr.pack(side=tk.TOP, fill=tk.BOTH, expand=tk.TRUE, padx=10, pady=10)
 
         self._start_run_btn = ctk.CTkButton(
-            controls_fr, text='Start', width=100, command=self.start_run
+            controls_fr, text='Start', width=70, command=self.start_run
         )
-        self._start_run_btn.pack(side=tk.LEFT, fill=tk.X, expand=tk.FALSE, padx=(30, 0))
+        self._start_run_btn.pack(side=tk.LEFT, fill=tk.X, expand=tk.FALSE, padx=30)
         self._start_run_btn.configure(state=tk.NORMAL)
 
         self._stop_run_btn = ctk.CTkButton(
-            controls_fr, text='Stop', width=100, command=self.stop_run
+            controls_fr, text='Stop', width=70, command=self.stop_run
         )
-        self._stop_run_btn.pack(side=tk.RIGHT, fill=tk.X, expand=tk.FALSE, padx=(0, 30))
+        self._stop_run_btn.pack(side=tk.LEFT, fill=tk.X, expand=tk.FALSE, padx=10)
         self._stop_run_btn.configure(state=tk.DISABLED)
+
+        self._end_sess_btn = ctk.CTkButton(
+            controls_fr, text='End Session', width=90, command=self.end_session
+        )
+        self._end_sess_btn.pack(side=tk.RIGHT, fill=tk.X, expand=tk.FALSE, padx=30)
+        self._end_sess_btn.configure(state=tk.DISABLED)
         # endregion
 
         # region Runs Frame
@@ -171,10 +177,16 @@ class TimersTab:
         )
         timer_lbl.pack(side=tk.LEFT, fill=tk.BOTH, expand=tk.TRUE)
 
+        self._runs_scrl_fr.update_idletasks()
+        self._runs_scrl_fr._parent_canvas.yview_moveto(1.0)
+
     def start_run(self) -> None:
         '''Start a new run.'''
         if self._run_ongoing:
             raise RuntimeError('There is an ongoing run already!')
+
+        if not self._sess_ongoing:
+            self._sess_ongoing = self._app.data_mgr.session_mgr.create_session()
 
         self._run_ongoing = self._app.data_mgr.run_mgr.create_run()
         self._run_ongoing.start_run()
@@ -186,8 +198,7 @@ class TimersTab:
         if not self._run_ongoing:
             raise RuntimeError('You have to start a run first!')
 
-        if not self._sess_ongoing:
-            self._sess_ongoing = self._app.data_mgr.session_mgr.create_session()
+        self._stop_run_btn.configure(state=tk.DISABLED)
 
         self._run_ongoing.finish_run()
         self._app.data_mgr.session_mgr.add_run_to_session(
@@ -195,8 +206,18 @@ class TimersTab:
         )
         self._add_run_to_runs_section(self._run_ongoing)
         self._run_ongoing = None
+
         self._start_run_btn.configure(state=tk.NORMAL)
+        self._end_sess_btn.configure(state=tk.NORMAL)
+
+
+    def end_session(self) -> None:
+        '''End the current session'''
+        if not self._sess_ongoing:
+            raise RuntimeError('There is no existing session to be stopped!')
+
         self._stop_run_btn.configure(state=tk.DISABLED)
+        self._sess_ongoing.end_session()
 
     def add_item_to_run(self) -> None:
         '''Add item to the selected run'''
