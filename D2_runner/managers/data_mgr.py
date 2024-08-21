@@ -1,11 +1,9 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from entities import Session, Run, Item
+    from entities import Session
 
 import os
-import shutil
-import json
 import pickle
 
 
