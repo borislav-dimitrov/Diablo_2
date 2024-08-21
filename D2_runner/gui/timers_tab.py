@@ -7,7 +7,7 @@ import customtkinter as ctk
 import tkinter as tk
 
 from entities import Session, Run, Item
-from utils import Themes, FONTS, THEME_COLORS, generate_uniq_id
+from utils import Themes, FONTS, THEME_COLORS, generate_uniq_id, ItemCategory
 
 
 class TimersTab:
@@ -157,25 +157,43 @@ class TimersTab:
     def _add_run_to_runs_section(self, new_run: Run) -> None:
         '''Add run to the runs section.'''
         assert hasattr(self, '_runs_scrl_fr')
-
         run_count = self._sess_ongoing.runs_count
         base_fr = ctk.CTkFrame(self._runs_scrl_fr, fg_color='transparent')
+        base_fr.run_obj = new_run
+        base_fr.is_selected = False
         base_fr.pack(side=tk.TOP, fill=tk.X, padx=10)
 
         run_nr_lbl = ctk.CTkLabel(
             base_fr, text=f'Run {run_count:>{len(self._sess_time.get())}}:',
             anchor=tk.W, text_color=self._color_normal, font=FONTS['label']
         )
+        run_nr_lbl.is_selected = False
         run_nr_lbl.pack(side=tk.LEFT, fill=tk.BOTH, expand=tk.TRUE)
 
         timer_lbl = ctk.CTkLabel(
             base_fr, text=new_run.run_time_stamp, anchor=tk.E,
             text_color=self._color_normal, font=FONTS['label']
         )
+        timer_lbl.is_selected = False
         timer_lbl.pack(side=tk.LEFT, fill=tk.BOTH, expand=tk.TRUE)
 
         self._runs_scrl_fr.update_idletasks()
         self._runs_scrl_fr._parent_canvas.yview_moveto(1.0)
+
+        widgets = {
+            'frame': base_fr,
+            'run_nr': run_nr_lbl,
+            'timer': timer_lbl
+        }
+
+        base_fr.bind('<Button-1>', lambda e: self._select_run(e, widgets))
+        base_fr.bind('<Enter>', lambda e: self._run_enter(e, widgets))
+        base_fr.bind('<Leave>', lambda e: self._run_leave(e, widgets))
+
+        for widget in base_fr.winfo_children():
+            widget.bind('<Button-1>', lambda e: self._select_run(e, widgets))
+            widget.bind('<Enter>', lambda e: self._run_enter(e, widgets))
+            widget.bind('<Leave>', lambda e: self._run_leave(e, widgets))
 
     def start_run(self) -> None:
         '''Start a new run.'''
@@ -223,7 +241,11 @@ class TimersTab:
     def add_item_to_run(self) -> None:
         '''Add item to the selected run'''
         # TODO - get selected run
-        item = self._app.data_mgr.item_mgr.create_item(description='item001')
+        item = Item(
+            item_id=generate_uniq_id(),
+            category=ItemCategory.UNKNOWN,
+            description='40ed/15ias'
+        )
         import pdb; pdb.set_trace()
 
     def _start_new_session(self) -> Session:
@@ -262,3 +284,30 @@ class TimersTab:
 
         for widget in self._runs_scrl_fr.winfo_children():
             widget.destroy()
+
+    def _select_run(self, _, widgets: dict) -> Run:
+        '''Select a run from the scrolling frame with runs.'''
+        for top_widget in self._runs_scrl_fr.winfo_children():
+            for widget in top_widget.winfo_children():
+                widget.configure(bg_color='transparent')
+                widget.is_selected = False
+                if isinstance(widget, ctk.CTkLabel):
+                    widget.configure(text_color=self._color_normal)
+
+        for widget in widgets:
+            widgets[widget].configure(bg_color=self._color_normal)
+            if isinstance(widgets[widget], ctk.CTkLabel):
+                widgets[widget].configure(text_color='white')
+            widgets[widget].is_selected = True
+
+    def _run_enter(self, _, widgets: dict) -> None:
+        '''On run mouse enter.'''
+        for widget in widgets:
+            if hasattr(widgets[widget], 'is_selected') and not widgets[widget].is_selected:
+                widgets[widget].configure(bg_color=self._color_hover)
+
+    def _run_leave(self, _, widgets: dict) -> None:
+        '''On run mouse leave.'''
+        for widget in widgets:
+            if hasattr(widgets[widget], 'is_selected') and not widgets[widget].is_selected:
+                widgets[widget].configure(bg_color='transparent')
