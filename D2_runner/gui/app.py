@@ -103,6 +103,7 @@ class App:
         if self._timers_tab._run_ongoing and self._timers_tab._run_ongoing.is_running:
             self._timers_tab.stop_run()
 
-        self._timers_tab.end_session()
+        if self._timers_tab._sess_ongoing:
+            self._timers_tab.end_session()
 
         self._root.destroy()
