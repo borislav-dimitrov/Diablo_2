@@ -82,6 +82,6 @@ class Session:
         return len(self.runs)
 
     @property
-    def running(self) -> bool:
-        '''Get the running state of the session.'''
-        return self._running
+    def is_running(self) -> bool:
+        '''Wether the session is still running.'''
+        return self._timer.is_running

@@ -34,7 +34,7 @@ class Run:
         self._finish_time = datetime.now()
         self._state = RunStates.FINISHED
         self._timer.stop_timer()
-        self._time_stamp = self._timer._str_var.get()
+        self._time_stamp = self._timer.time_stamp
 
     def add_item(self, item: Item) -> None:
         '''Add item to the current run.'''
@@ -72,3 +72,8 @@ class Run:
     def run_time_seconds(self) -> timedelta:
         '''Get the seconds of the run time'''
         return self._timer.get_seconds
+
+    @property
+    def is_running(self) -> bool:
+        '''Wether the run is still running.'''
+        return self._timer.is_running

@@ -19,7 +19,9 @@ class DataMgr:
         all_file_paths = []
 
         for session in sessions:
-            session_file_path = os.path.join(self.data_dir, f'sess_{session.sess_id}')
+            session_file_path = os.path.join(
+                self.data_dir, f'sess_{session.sess_id}'
+            )
             all_file_paths.append(session_file_path)
 
             with open(session_file_path, 'wb') as fh:

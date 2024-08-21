@@ -30,7 +30,7 @@ class App:
         self._allow_resize = allow_resize
         self._title = title
         self._icon = os.path.abspath(icon)
-        self._app = ctk.CTk()
+        self._root = ctk.CTk()
 
         self._init()
 
@@ -39,22 +39,23 @@ class App:
         ctk.set_appearance_mode(self._appearance)
         ctk.set_default_color_theme(self._theme)
 
-        self._app.title(self._title)
-        self._app.geometry(f'{self._resolution[0]}x{self._resolution[1]}')
+        self._root.title(self._title)
+        self._root.geometry(f'{self._resolution[0]}x{self._resolution[1]}')
         assert os.path.isfile(self._icon)
-        self._app.iconbitmap(self._icon)
+        self._root.iconbitmap(self._icon)
         if not self._allow_resize:
-            self._app.resizable(False, False)
+            self._root.resizable(False, False)
+        self._root.protocol('WM_DELETE_WINDOW', self._exit)
 
         self._create_gui()
 
     def _create_gui(self) -> None:
         '''Create and assemble the gui widgets.'''
-        self._main_tab_view = ctk.CTkTabview(master=self._app)
+        self._main_tab_view = ctk.CTkTabview(master=self._root)
         self._main_tab_view.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
         self._timers_tab = TimersTab(
-            theme=self._theme, frame=self._add_tab_to_main_tab_view('Timers')
+            app=self, theme=self._theme, frame=self._add_tab_to_main_tab_view('Timers')
         )
         self._review_sess_tab = self._add_tab_to_main_tab_view('Review Session')
         self._grail_tab = self._add_tab_to_main_tab_view('Grail')
@@ -95,4 +96,13 @@ class App:
 
     def run(self):
         '''Run the application.'''
-        self._app.mainloop()
+        self._root.mainloop()
+
+    def _exit(self) -> None:
+        '''Override default app exit.'''
+        if self._timers_tab._run_ongoing and self._timers_tab._run_ongoing.is_running:
+            self._timers_tab.stop_run()
+
+        self._timers_tab.end_session()
+
+        self._root.destroy()

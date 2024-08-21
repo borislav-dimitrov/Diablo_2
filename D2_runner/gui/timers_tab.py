@@ -1,3 +1,8 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from .app import App
+
 import customtkinter as ctk
 import tkinter as tk
 
@@ -7,8 +12,10 @@ from utils import Themes, FONTS, THEME_COLORS, generate_uniq_id
 
 class TimersTab:
     def __init__(
-        self, theme: Themes, frame: ctk.CTkFrame | ctk.CTkScrollableFrame
+        self, theme: Themes, app: App,
+        frame: ctk.CTkFrame | ctk.CTkScrollableFrame
     ) -> None:
+        self._app = app
         self._frame = frame
 
         # Style
@@ -177,42 +184,31 @@ class TimersTab:
 
         # Create run and session(if needed)
         if not self._sess_ongoing:
-            self._sess_ongoing = Session(
-                sess_id=generate_uniq_id(), timer_lbl_str_var=self._sess_time
-            )
-
-        if not self._sess_ongoing.running:
+            self._start_new_session()
+        if not self._sess_ongoing.is_running:
             self._sess_ongoing.start_session()
 
-        self._run_ongoing = Run(
-            run_id=generate_uniq_id(), timer_lbl_str_var=self._run_time
-        )
-        self._run_ongoing.start_run()
-        self._start_run_btn.configure(state=tk.DISABLED)
-        self._stop_run_btn.configure(state=tk.NORMAL)
+        self._start_new_run()
 
     def stop_run(self) -> None:
         '''Stop the currently going run.'''
         if not self._run_ongoing:
             raise RuntimeError('You have to start a run first!')
 
-        self._stop_run_btn.configure(state=tk.DISABLED)
         self._run_ongoing.finish_run()
         self._sess_ongoing.add_run(self._run_ongoing)
-
         self.update_runs_count()
         self._add_run_to_runs_section(self._run_ongoing)
         self._run_ongoing = None
 
-        self._start_run_btn.configure(state=tk.NORMAL)
+        self._toggle_run_btns(start=False)
         self._end_sess_btn.configure(state=tk.NORMAL)
-
 
     def end_session(self) -> None:
         '''End the current session'''
         if not self._sess_ongoing:
             raise RuntimeError('There is no existing session to be stopped!')
-        if not self._sess_ongoing.running:
+        if not self._sess_ongoing.is_running:
             raise RuntimeError('The current session is not started yet!')
 
         self._stop_run_btn.configure(state=tk.DISABLED)
@@ -220,7 +216,7 @@ class TimersTab:
         self._fastest_time.set(self._sess_ongoing.fastest_run)
         self._slowest_time.set(self._sess_ongoing.slowest_run)
         self._avg_time.set(self._sess_ongoing.average_run)
-        # TODO - save session
+        self._app.data_mgr.save(sessions=[self._sess_ongoing])
 
         self._sess_ongoing = None
 
@@ -229,3 +225,40 @@ class TimersTab:
         # TODO - get selected run
         item = self._app.data_mgr.item_mgr.create_item(description='item001')
         import pdb; pdb.set_trace()
+
+    def _start_new_session(self) -> Session:
+        '''Start a new session.'''
+        self._sess_ongoing = Session(
+            sess_id=generate_uniq_id(), timer_lbl_str_var=self._sess_time
+        )
+        self._cleanup()
+
+    def _start_new_run(self) -> Run:
+        '''Start a new run.'''
+        self._run_ongoing = Run(
+            run_id=generate_uniq_id(), timer_lbl_str_var=self._run_time
+        )
+        self._run_ongoing.start_run()
+        self._toggle_run_btns(start=True)
+
+    def _toggle_run_btns(self, start: bool = True) -> None:
+        '''Toggle the run button state.'''
+        if start:
+            self._start_run_btn.configure(state=tk.DISABLED)
+            self._stop_run_btn.configure(state=tk.NORMAL)
+        else:
+            self._start_run_btn.configure(state=tk.NORMAL)
+            self._stop_run_btn.configure(state=tk.DISABLED)
+
+    def _cleanup(self) -> None:
+        '''Do the cleanup when a new session is started.'''
+        self._sess_time.set('00:00:00')
+        self.update_runs_count()
+        self._run_time.set('00:00:00')
+
+        self._fastest_time.set('00:00:00')
+        self._slowest_time.set('00:00:00')
+        self._avg_time.set('00:00:00')
+
+        for widget in self._runs_scrl_fr.winfo_children():
+            widget.destroy()

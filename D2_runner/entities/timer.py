@@ -11,6 +11,7 @@ class Timer:
         self._str_var = str_var
         self._seconds = 0
         self._running = False
+        self.time_stamp = '00:00:00'
 
     def start_timer(self) -> None:
         '''Start the timer.'''
@@ -23,6 +24,9 @@ class Timer:
         '''Stop the timer.'''
         self._running = False
 
+        # Detatch the string var so that the objects can be pickled
+        self._str_var = None
+
     def _thread_target(self) -> None:
         '''Do stuff on tick.'''
         while self._running:
@@ -30,9 +34,15 @@ class Timer:
             if self._running:
                 self._seconds += 1
                 delta = timedelta(seconds=self._seconds)
-                self._str_var.set(value=timedelta_to_timestmap(delta))
+                self.time_stamp = timedelta_to_timestmap(delta)
+                self._str_var.set(value=self.time_stamp)
 
     @property
     def get_seconds(self) -> int:
         '''Get the ammount of seconds passed.'''
         return self._seconds
+
+    @property
+    def is_running(self) -> bool:
+        '''Wether the timer is still running.'''
+        return self._running
