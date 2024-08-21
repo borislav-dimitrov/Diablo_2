@@ -1,14 +1,16 @@
+from __future__ import annotations
 from typing import TYPE_CHECKING
-
 if TYPE_CHECKING:
-    from entities import Item
+    from customtkinter import StringVar
 
 from datetime import datetime, timedelta
-from utils import RunStates, timedelta_to_str
+from utils import RunStates, timedelta_to_timestmap
+from .timer import Timer
+from .item import Item
 
 
 class Run:
-    def __init__(self, run_id: str) -> None:
+    def __init__(self, run_id: str, timer_lbl_str_var: StringVar) -> None:
         '''
         :param run_id: The unique ID of the current run
         '''
@@ -16,34 +18,33 @@ class Run:
         self._state = RunStates.INITIALIZED
         self._start_time = None
         self._finish_time = None
-        self._timestamp_format = '%H:%M:%S'
-        self._run_time_seconds = None
-        self._run_time_stamp = None
         self.loot: list[Item] = []
+
+        self._time_stamp = '00:00:00'
+        self._timer = Timer(timer_lbl_str_var)
 
     def start_run(self) -> None:
         '''Start the run.'''
         self._start_time = datetime.now()
         self._state = RunStates.STARTED
+        self._timer.start_timer()
 
     def finish_run(self) -> None:
         '''Finish the run.'''
         self._finish_time = datetime.now()
         self._state = RunStates.FINISHED
-        self._calc_run_time()
+        self._timer.stop_timer()
+        self._time_stamp = self._timer._str_var.get()
 
-    def _calc_run_time(self) -> None:
-        '''Calculate the time for which the run was performed.'''
-        if self._start_time and self._finish_time:
-            delta_obj = (
-                max((self._start_time, self._finish_time))
-                - min((self._start_time, self._finish_time))
-            )
-            self._run_time_seconds = delta_obj.total_seconds()
-            self._run_time_stamp = timedelta_to_str(timedelta(seconds=self._run_time_seconds))
-            return
+    def add_item(self, item: Item) -> None:
+        '''Add item to the current run.'''
+        if not isinstance(item, Item):
+            raise RuntimeError('Not a valid Item!')
 
-        raise RuntimeError('Run is not finished yet!')
+        if item in self.loot:
+            raise RuntimeError('Item is already in current Run!')
+
+        self.loot.append(item)
 
     @property
     def state(self) -> RunStates:
@@ -65,9 +66,9 @@ class Run:
     @property
     def run_time_stamp(self) -> str | None:
         '''Get the time stamp for which the run was performed.'''
-        return self._run_time_stamp
+        return self._time_stamp
 
     @property
     def run_time_seconds(self) -> timedelta:
         '''Get the seconds of the run time'''
-        return self._run_time_seconds
+        return self._timer.get_seconds

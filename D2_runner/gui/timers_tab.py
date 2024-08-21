@@ -1,24 +1,15 @@
-from __future__ import annotations
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from .app import App
-    from entities import Session, Run, Item
-
 import customtkinter as ctk
 import tkinter as tk
 
-from utils import Themes, FONTS, THEME_COLORS
+from entities import Session, Run, Item
+from utils import Themes, FONTS, THEME_COLORS, generate_uniq_id
 
 
 class TimersTab:
     def __init__(
-        self,
-        app: App,
-        theme: Themes,
-        frame: ctk.CTkFrame | ctk.CTkScrollableFrame
+        self, theme: Themes, frame: ctk.CTkFrame | ctk.CTkScrollableFrame
     ) -> None:
         self._frame = frame
-        self._app = app
 
         # Style
         self._color_normal = THEME_COLORS[theme]['normal']
@@ -36,11 +27,10 @@ class TimersTab:
 
         self._create_and_assemble()
 
-    def change_runs_count(self, count: int) -> None:
+    def update_runs_count(self) -> None:
         '''Change the runs counter.'''
-        assert isinstance(count, int)
-
-        self._run_count = ctk.StringVar(value=f'{count:<{len(self._sess_time.get())}}')
+        runs_count = self._sess_ongoing.runs_count
+        self._run_count.set(value=f'{runs_count:<{len(self._sess_time.get())}}')
 
     def _create_and_assemble(self) -> None:
         '''Create and assemble the timers tab.'''
@@ -59,7 +49,7 @@ class TimersTab:
         )
 
         self._create_generic_timer(clocks_fr, 'Session Time:', self._sess_time)
-        self._create_generic_timer(clocks_fr, 'Runs Count:', self._run_count, pad_y=None)
+        self._create_generic_timer(clocks_fr, 'Finished Runs:', self._run_count, pad_y=None)
         self._create_generic_timer(clocks_fr, 'Run Time:', self._run_time, pad_y=None)
         self._create_generic_timer(clocks_fr, 'Fastest Run:', self._fastest_time, pad_y=(20,0))
         self._create_generic_timer(clocks_fr, 'Slowest Run:', self._slowest_time, pad_y=None)
@@ -185,10 +175,18 @@ class TimersTab:
         if self._run_ongoing:
             raise RuntimeError('There is an ongoing run already!')
 
+        # Create run and session(if needed)
         if not self._sess_ongoing:
-            self._sess_ongoing = self._app.data_mgr.session_mgr.create_session()
+            self._sess_ongoing = Session(
+                sess_id=generate_uniq_id(), timer_lbl_str_var=self._sess_time
+            )
 
-        self._run_ongoing = self._app.data_mgr.run_mgr.create_run()
+        if not self._sess_ongoing.running:
+            self._sess_ongoing.start_session()
+
+        self._run_ongoing = Run(
+            run_id=generate_uniq_id(), timer_lbl_str_var=self._run_time
+        )
         self._run_ongoing.start_run()
         self._start_run_btn.configure(state=tk.DISABLED)
         self._stop_run_btn.configure(state=tk.NORMAL)
@@ -199,11 +197,10 @@ class TimersTab:
             raise RuntimeError('You have to start a run first!')
 
         self._stop_run_btn.configure(state=tk.DISABLED)
-
         self._run_ongoing.finish_run()
-        self._app.data_mgr.session_mgr.add_run_to_session(
-            run=self._run_ongoing, session=self._sess_ongoing
-        )
+        self._sess_ongoing.add_run(self._run_ongoing)
+
+        self.update_runs_count()
         self._add_run_to_runs_section(self._run_ongoing)
         self._run_ongoing = None
 
@@ -215,9 +212,17 @@ class TimersTab:
         '''End the current session'''
         if not self._sess_ongoing:
             raise RuntimeError('There is no existing session to be stopped!')
+        if not self._sess_ongoing.running:
+            raise RuntimeError('The current session is not started yet!')
 
         self._stop_run_btn.configure(state=tk.DISABLED)
         self._sess_ongoing.end_session()
+        self._fastest_time.set(self._sess_ongoing.fastest_run)
+        self._slowest_time.set(self._sess_ongoing.slowest_run)
+        self._avg_time.set(self._sess_ongoing.average_run)
+        # TODO - save session
+
+        self._sess_ongoing = None
 
     def add_item_to_run(self) -> None:
         '''Add item to the selected run'''

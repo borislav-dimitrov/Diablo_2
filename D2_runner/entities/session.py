@@ -1,35 +1,30 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from entities import Run
+    from customtkinter import StringVar
+
+from .timer import Timer
+from .run import Run
 
 from datetime import timedelta
-from utils import timedelta_to_str, smaller_time_stamp
+from utils import timedelta_to_timestmap, seconds_to_time_stamp
 
 
 class Session:
-    def __init__(self, sess_id: str):
+    def __init__(self, sess_id: str, timer_lbl_str_var: StringVar):
+        self._running = False
         self.sess_id = sess_id
         self.runs: list[Run] = []
-        self._sess_started = None
-        self._sess_ended = None
-        self._sess_duration = None
+        self._timer = Timer(timer_lbl_str_var)
 
     def _calc_run_times(self) -> list[str, str, str]:
         '''Calculate the [fastest, slowest, average] run times.'''
         results = ['unknown', 'unknown', 'unknown']
-        all_run_times = []
 
-        for run in self.runs:
-            all_run_times.append({
-                'run': run,
-                'delta': run.run_time_seconds
-            })
-
-        if self.runs and len(all_run_times) > 1:
+        if self.runs and len(self.runs) > 1:
             fastest = min(self.runs, key=lambda x: x.run_time_seconds)
             slowest = max(self.runs, key=lambda x: x.run_time_seconds)
-            average = timedelta_to_str(
+            average = timedelta_to_timestmap(
                 (
                     timedelta(seconds=fastest.run_time_seconds)
                     + timedelta(seconds=slowest.run_time_seconds)
@@ -39,27 +34,47 @@ class Session:
 
         return results
 
+    def start_session(self) -> None:
+        '''Start the session timer.'''
+        self._running = True
+        self._timer.start_timer()
+
     def end_session(self) -> None:
         '''End the current session.'''
-        first, last = self.first_last_runs
-        self._sess_started = first.start_time
-        self._sess_ended = last.finish_time
-        # TODO - implement sess duration and update values on end session
+        self._running = False
+        self._timer.stop_timer()
+
+    def add_run(self, run: Run) -> None:
+        '''Add a run to the current session.'''
+        if not isinstance(run, Run):
+            raise RuntimeError('Not a valid Run!')
+
+        if run in self.runs:
+            raise RuntimeError('Run is already in current Session!')
+
+        self.runs.append(run)
 
     @property
     def fastest_run(self) -> str:
         '''Get the fastest run time.'''
-        return self._calc_run_times()[0]
+        stamp = min(self.runs, key=lambda x: x.run_time_seconds).run_time_stamp
+        return stamp
 
     @property
     def slowest_run(self) -> str:
         '''Get the slowest run time.'''
-        return self._calc_run_times()[1]
+        stamp = max(self.runs, key=lambda x: x.run_time_seconds).run_time_stamp
+        return stamp
 
     @property
     def average_run(self) -> str:
         '''Get the average run time.'''
-        return self._calc_run_times()[2]
+        total_time = 0
+        for run in self.runs:
+            total_time += run.run_time_seconds
+
+        avg_run_time_seconds = int(total_time / len(self.runs))
+        return seconds_to_time_stamp(avg_run_time_seconds)
 
     @property
     def runs_count(self) -> int:
@@ -67,22 +82,6 @@ class Session:
         return len(self.runs)
 
     @property
-    def first_last_runs(self) -> list[Run, Run]:
-        '''Get the first and the last runs.'''
-        if not self.runs:
-            return [None, None]
-
-        first_obj = self.runs[0]
-        last_obj = self.runs[0]
-
-        for run in self.runs:
-            started_at = run.start_time
-            first_started_at = first_obj.start_time
-            last_started_at = last_obj.start_time
-
-            if smaller_time_stamp(started_at, first_started_at) == started_at:
-                first_obj = run
-            elif smaller_time_stamp(started_at, last_started_at) == last_started_at:
-                last_obj = run
-
-        return first_obj, last_obj
+    def running(self) -> bool:
+        '''Get the running state of the session.'''
+        return self._running

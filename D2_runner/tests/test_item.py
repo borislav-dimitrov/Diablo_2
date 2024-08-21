@@ -5,7 +5,7 @@ from entities import Item
 
 @pytest.fixture
 def item() -> Item:
-    item = Item(item_id='item001', descritpion='40ed/15ias jewel')
+    item = Item(item_id='item001', description='40ed/15ias jewel')
     return item
 
 

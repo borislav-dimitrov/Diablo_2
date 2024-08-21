@@ -54,8 +54,7 @@ class App:
         self._main_tab_view.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
         self._timers_tab = TimersTab(
-            app=self, theme=self._theme,
-            frame=self._add_tab_to_main_tab_view('Timers')
+            theme=self._theme, frame=self._add_tab_to_main_tab_view('Timers')
         )
         self._review_sess_tab = self._add_tab_to_main_tab_view('Review Session')
         self._grail_tab = self._add_tab_to_main_tab_view('Grail')
