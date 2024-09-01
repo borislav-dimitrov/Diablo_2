@@ -6,8 +6,9 @@ if TYPE_CHECKING:
 import customtkinter as ctk
 import tkinter as tk
 
-from entities import Session, Run, Item
-from utils import Themes, FONTS, THEME_COLORS, generate_uniq_id, ItemCategory
+from .item_creation_window import CreateItemWindow
+from entities import Session, Run
+from utils import Themes, FONTS, THEME_COLORS, generate_uniq_id
 
 
 class TimersTab:
@@ -240,13 +241,27 @@ class TimersTab:
 
     def add_item_to_run(self) -> None:
         '''Add item to the selected run'''
-        # TODO - get selected run
-        item = Item(
-            item_id=generate_uniq_id(),
-            category=ItemCategory.UNKNOWN,
-            description='40ed/15ias'
+        run_selected = None
+        run_nr = None
+
+        for frame_widget in self._runs_scrl_fr.winfo_children():
+            if frame_widget.is_selected and hasattr(frame_widget, 'run_obj'):
+                run_selected = frame_widget.run_obj
+                frame_widget.winfo_children()[0].cget('text')
+                run_nr = frame_widget.winfo_children()[0].cget('text')
+                run_nr = run_nr.split()[-1].strip()[:-1]
+                run_nr = int(run_nr)
+                break
+
+        if run_selected is None or run_nr is None or not isinstance(run_nr, int):
+            raise RuntimeError('Select a run first!')
+
+        # TODO - create item creation gui and show it as a top level
+        CreateItemWindow(
+            self._app._root,
+            run_selected, run_nr,
+            self._color_normal, self._color_hover
         )
-        import pdb; pdb.set_trace()
 
     def _start_new_session(self) -> Session:
         '''Start a new session.'''
