@@ -26,10 +26,14 @@ class RunCoutner:
     def add_loot(self, loot_description: str):
         self._loot.append(f'{loot_description} #{self._runs_ct}')
 
+    def add_run(self):
+        self._runs_ct += 1
+        return self.runs
+
     @property
-    def runs(self):
+    def runs(self) -> int:
         return self._runs_ct
 
     @property
-    def loot(self):
+    def loot(self) -> list[str]:
         return self._loot

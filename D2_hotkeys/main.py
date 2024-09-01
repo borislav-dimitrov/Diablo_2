@@ -1,29 +1,37 @@
+from threading import Thread
 import keyboard
 from hotkeys import HotKeys
 from run_counter import RunCoutner
+from views import Views
 
 
-hotkeys = HotKeys()
-run_counter = RunCoutner()
+HOTKEYS = HotKeys()
+RUN_COUNTER = RunCoutner()
+VIEWS = Views(RUN_COUNTER)
 
 
 def on_key_press(event):
     if event.name == 'f5':
-        hotkeys.exit_game()
+        HOTKEYS.exit_game()
     elif event.name == 'f6':
-        hotkeys.create_new_game()
+        HOTKEYS.create_new_game()
+        RUN_COUNTER.add_run()
+        VIEWS.update_runs()
     elif event.name == 'f7':
-        hotkeys.insert_loot(run_counter)
+        VIEWS.insert_loot()
     elif event.name == 'f8':
-        hotkeys.preview_loot(run_counter)
+        VIEWS.preview_loot()
+    elif event.name == 'f9':
+        VIEWS.toggle_overlay()
+    elif event.name == 'f12':
+        VIEWS.close_all_views()
 
 
 def main_func():
-    run_counter.load()
+    RUN_COUNTER.load()
     keyboard.on_press(on_key_press)
-
-    keyboard.wait('f12')
-    run_counter.save()
+    VIEWS.run_main_view()
+    RUN_COUNTER.save()
 
 
 if __name__ == '__main__':
