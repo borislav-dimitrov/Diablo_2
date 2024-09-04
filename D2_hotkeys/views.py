@@ -45,6 +45,7 @@ class Views:
             if message == 'insert_loot':
                 self._insert_loot()
             elif message == 'preview_loot':
+                self._refresh_all_loot()
                 self._preview_loot_top.deiconify()
             elif message == 'toggle_overlay':
                 self._toggle_overlay()
@@ -93,22 +94,26 @@ class Views:
         self._preview_loot_top.resizable(False, False)
         self._preview_loot_top.attributes('-topmost', True)
 
-        loot_fr = ctk.CTkScrollableFrame(
+        self._loot_fr = ctk.CTkScrollableFrame(
             self._preview_loot_top, height=600, width=300,
             scrollbar_button_color=self._color,
             scrollbar_button_hover_color=self._hover_color
         )
-        loot_fr.pack(
+        self._loot_fr.pack(
             side=tk.LEFT, fill=tk.X, expand=tk.TRUE
         )
 
-        for loot in self._run_counter.loot:
-            ctk.CTkLabel(
-                loot_fr, text=loot, fg_color='transparent'
-            ).pack(side=tk.TOP, fill=tk.X, expand=tk.TRUE)
-
         self._preview_loot_top.protocol('WM_DELETE_WINDOW', close_top)
         self._preview_loot_top.withdraw()
+
+    def _refresh_all_loot(self):
+        for widget in self._loot_fr.winfo_children():
+            widget.destroy()
+
+        for loot in self._run_counter.loot:
+            ctk.CTkLabel(
+                self._loot_fr, text=loot, fg_color='transparent'
+            ).pack(side=tk.TOP, fill=tk.X, expand=tk.TRUE)
 
     def _create_overlay(self):
         # Position the overlay

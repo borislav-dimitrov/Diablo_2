@@ -5,8 +5,30 @@ from run_counter import RunCoutner
 from views import Views
 
 
+class Difficulties:
+    NORMAL = 0
+    NIGHTMARE = 1
+    HELL = 2
+
+
+class RunSettings:
+    DEFAULT = {
+        'file': 'default.json',
+        'difficulty': Difficulties.HELL
+    }
+    MEPHISTO_NM = {
+        'file': 'mephisto_nm.json',
+        'difficulty': Difficulties.NIGHTMARE
+    }
+    ANDARIEL_NM = {
+        'file': 'andariel_nm.json',
+        'difficulty': Difficulties.NIGHTMARE
+    }
+
+
+SELECTED_RUN = RunSettings.ANDARIEL_NM
 HOTKEYS = HotKeys()
-RUN_COUNTER = RunCoutner()
+RUN_COUNTER = RunCoutner(SELECTED_RUN['file'])
 VIEWS = Views(RUN_COUNTER)
 
 
@@ -14,7 +36,7 @@ def on_key_press(event):
     if event.name == 'f5':
         HOTKEYS.exit_game()
     elif event.name == 'f6':
-        HOTKEYS.create_new_game()
+        HOTKEYS.create_new_game(difficulty=SELECTED_RUN['difficulty'])
         RUN_COUNTER.add_run()
         VIEWS.update_runs()
     elif event.name == 'f7':
