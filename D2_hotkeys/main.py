@@ -24,9 +24,13 @@ class RunSettings:
         'file': 'andariel_nm.json',
         'difficulty': Difficulties.NIGHTMARE
     }
+    ANDARIEL_HELL = {
+        'file': 'andariel_hell.json',
+        'difficulty': Difficulties.HELL
+    }
 
 
-SELECTED_RUN = RunSettings.ANDARIEL_NM
+SELECTED_RUN = RunSettings.ANDARIEL_HELL
 HOTKEYS = HotKeys()
 RUN_COUNTER = RunCoutner(SELECTED_RUN['file'])
 VIEWS = Views(RUN_COUNTER)

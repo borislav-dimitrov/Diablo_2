@@ -112,7 +112,8 @@ class Views:
 
         for loot in self._run_counter.loot:
             ctk.CTkLabel(
-                self._loot_fr, text=loot, fg_color='transparent'
+                self._loot_fr, text=loot, fg_color='transparent',
+                text_color=self._color
             ).pack(side=tk.TOP, fill=tk.X, expand=tk.TRUE)
 
     def _create_overlay(self):
